@@ -3,7 +3,8 @@
 # Make main meric e.g. KI as absolute difference between home team and opponent
 # added 2 sets of metrics for team and opponent (suffixed with "t" and "o" respectively)
 
-print('check version')
+# on Aug 30 - added relative version of team performance
+# Subiaco = Perth, Football Park = Adelaide Oval
 
 def get_drive():
     '''
@@ -158,6 +159,8 @@ def fix_venue(name):
         ground = 'Olympic Park'
     elif name=='ANZ':
         ground = 'Stadium Australia'
+    elif name=='Football Park':
+        ground='Adelaide Oval'
     elif name=='Adelaide':
         ground='Adelaide Oval'
     elif name=='Aurora':
@@ -199,6 +202,8 @@ def fix_venue(name):
     elif name=='Metricon':
         ground = 'Carrara'
     elif name=='Perth':
+        ground='Perth Stadium'
+    elif name=='Subiaco':
         ground='Perth Stadium'
     elif name=='SCG':
         ground='S.C.G.'
@@ -444,6 +449,7 @@ def get_games(proxy=False):
     games['Result'] = [round((x[0] /(x[0] +x[1])),3) for x in zip(games['H'],games['A'])]
     #games = games.drop(['H','A'],1)
     games['ResultWL'] = [1 if x>=0.5 else 0 for x in games.Result]
+    games['Venue']=[fix_venue(x) for x in games['Venue']]
     return games
 
 
@@ -582,6 +588,145 @@ def get_team_performance_hist(season_from,season_to,proxy=False):
     team_performace['SC'] = [t-o for t,o in zip(team_performace['SCt'],team_performace['SCo'])]
     return team_performace
 
+def get_team_performance_hist_rel(season_from,season_to,proxy=False):
+    '''
+    this relative version of team performance history
+    main metric is expressed as team's relative advantage over the opponent
+    e.g. if team goals is 12 and opponent goals is 6
+    the main GL metric shows (12-6)/(12+6) = 0.333
+    if both team and opponent metrics are zero then combined one =0
+    so values range from -1 to +1
+    '''
+
+    import pandas as pd
+    import numpy as np
+    from datetime import datetime
+    from dateutil import parser
+    import bs4 as bs
+    import urllib.request
+
+    a =get_proxy(proxy)
+
+
+    games = get_games()
+    games_H = games.copy()
+    games_H['Team']=games_H['HomeTeam']
+    games_H['HomeFlag']=1
+    games_H = games_H.drop(['HomeTeam','AwayTeam'], 1)
+
+    games_A = games.copy()
+    games_A['Team']=games_A['AwayTeam']
+    games_A['HomeFlag']=0
+    games_A = games_A.drop(['HomeTeam','AwayTeam'], 1)
+    games_for_join = pd.concat([games_H,games_A])
+
+    team_performace = pd.DataFrame()
+    for season in range(season_from-4,season_to+1):
+        sauce = urllib.request.urlopen('https://afltables.com/afl/stats/'+str(season)+'t.html')
+        soup = bs.BeautifulSoup(sauce,'lxml')
+
+        tms=[]
+        i=0
+        for x in soup.find_all('th'):
+            if 'Team Statistics [Players]' in x.text:
+                tms.append(x.text[0:-26])
+                i+=1
+        cur_url = 'https://afltables.com/afl/stats/'+str(season)+'t.html'
+        dfs = pd.read_html(cur_url,header=1)
+        all_dfs = pd.DataFrame()
+
+        for i in range(len(dfs)):
+            if i % 2==0:
+                x= pd.concat([dfs[i],dfs[i+1].drop(['#','Opponent'],1)],1)
+                x['Team']=tms[i]
+                all_dfs = pd.concat([all_dfs, x])
+        all_dfs=all_dfs[all_dfs['#'] != 'W-D-L']
+        all_dfs['Year']=season
+        team_performace = pd.concat([team_performace,all_dfs])
+    team_performace = team_performace.rename(columns={'#': 'Round'})
+    team_performace['Round'] = [fix_round(x) for x in team_performace['Round']]
+    team_performace['Team'] = [fix_team_name(x) for x in team_performace['Team']]
+    team_performace['Opponent'] = [fix_team_name(x) for x in team_performace['Opponent']]
+
+    team_performace = pd.merge(team_performace,games_for_join.drop(['GameID','Attendance','Result'],1),how='left',on=
+
+['Year','Round','Team'])
+
+    team_performace['KIt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['KI']]
+    team_performace['MKt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['MK']]
+    team_performace['HBt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['HB']]
+    team_performace['DIt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['DI']]
+    team_performace['GLt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['GL']]
+    team_performace['BHt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['BH']]
+    team_performace['HOt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['HO']]
+    team_performace['TKt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['TK']]
+    team_performace['RBt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['RB']]
+    team_performace['IFt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['IF']]
+    team_performace['CLt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['CL']]
+    team_performace['CGt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['CG']]
+    team_performace['FFt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['FF']]
+    team_performace['FAt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['FA']]
+    team_performace['BRt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['BR']]
+    team_performace['CPt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['CP']]
+    team_performace['UPt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['UP']]
+    team_performace['CMt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['CM']]
+    team_performace['MIt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['MI']]
+    team_performace['1%t'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['1%']]
+    team_performace['BOt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['BO']]
+    team_performace['GAt'] = [0 if len(x.split('-')[0])==0 else int(x.split('-')[0]) for x in team_performace['GA']]
+    #added Score metric SC
+    team_performace['SCt'] = [g*6+b for g,b in zip(team_performace['GLt'],team_performace['BHt'])]
+    # this version change - getting opponent's stats "o" in column name is for "opposition"
+    team_performace['KIo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['KI']]
+    team_performace['MKo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['MK']]
+    team_performace['HBo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['HB']]
+    team_performace['DIo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['DI']]
+    team_performace['GLo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['GL']]
+    team_performace['BHo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['BH']]
+    team_performace['HOo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['HO']]
+    team_performace['TKo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['TK']]
+    team_performace['RBo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['RB']]
+    team_performace['IFo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['IF']]
+    team_performace['CLo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['CL']]
+    team_performace['CGo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['CG']]
+    team_performace['FFo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['FF']]
+    team_performace['FAo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['FA']]
+    team_performace['BRo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['BR']]
+    team_performace['CPo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['CP']]
+    team_performace['UPo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['UP']]
+    team_performace['CMo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['CM']]
+    team_performace['MIo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['MI']]
+    team_performace['1%o'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['1%']]
+    team_performace['BOo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['BO']]
+    team_performace['GAo'] = [0 if len(x.split('-')[1])==0 else int(x.split('-')[1]) for x in team_performace['GA']]
+    team_performace['SCo'] = [g*6+b for g,b in zip(team_performace['GLo'],team_performace['BHo'])]
+    #added Score metric SC
+    
+    #difference metric - now relative version ranging from -1 to +1 where 0 is even performance
+    team_performace['KI'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['KIt'],team_performace['KIo'])]
+    team_performace['MK'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['MKt'],team_performace['MKo'])]
+    team_performace['HB'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['HBt'],team_performace['HBo'])]
+    team_performace['DI'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['DIt'],team_performace['DIo'])]
+    team_performace['GL'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['GLt'],team_performace['GLo'])]
+    team_performace['BH'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['BHt'],team_performace['BHo'])]
+    team_performace['HO'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['HOt'],team_performace['HOo'])]
+    team_performace['TK'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['TKt'],team_performace['TKo'])]
+    team_performace['RB'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['RBt'],team_performace['RBo'])]
+    team_performace['IF'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['IFt'],team_performace['IFo'])]
+    team_performace['CL'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['CLt'],team_performace['CLo'])]
+    team_performace['CG'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['CGt'],team_performace['CGo'])]
+    team_performace['FF'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['FFt'],team_performace['FFo'])]
+    team_performace['FA'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['FAt'],team_performace['FAo'])]
+    team_performace['BR'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['BRt'],team_performace['BRo'])]
+    team_performace['CP'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['CPt'],team_performace['CPo'])]
+    team_performace['UP'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['UPt'],team_performace['UPo'])]
+    team_performace['CM'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['CMt'],team_performace['CMo'])]
+    team_performace['MI'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['MIt'],team_performace['MIo'])]
+    team_performace['1%'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['1%t'],team_performace['1%o'])]
+    team_performace['BO'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['BOt'],team_performace['BOo'])]
+    team_performace['GA'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['GAt'],team_performace['GAo'])]
+    team_performace['SC'] = [(t-o)/(t+o) if (t+o)>0 else 0 for t,o in zip(team_performace['SCt'],team_performace['SCo'])]
+    return team_performace
 
 def get_lineup(year,rnd,proxy=False):
     '''
