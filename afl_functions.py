@@ -1,10 +1,5 @@
-# new version 29 Aug 2018 
-# adding more metrics to team performance:
-# Make main meric e.g. KI as absolute difference between home team and opponent
-# added 2 sets of metrics for team and opponent (suffixed with "t" and "o" respectively)
+# 3 September 2018 Adding a combined function to get dataset for training or scoring
 
-# on Aug 30 - added relative version of team performance
-# Subiaco = Perth, Football Park = Adelaide Oval
 
 def get_drive():
     '''
@@ -1017,3 +1012,444 @@ def get_pastX(x,team,dt,team_performaceDF,print_missing=False):
     if tp1_avg.shape[0]==0 and print_missing:
         print('empty row generated for ', dt,' team:',team)
     return tp1_avg
+
+
+
+#create functions to calculate adj.ladder points 
+def adj_points_home(lst):
+    w1=5.0 # for winning against top4 team as of end of last season
+    w2=4.0 # for winning against top5-8 team as of end of last season
+    w3=3.0 # for winning against 9-13 team as of end of last season
+    w4=2.5 # for winning against 14-18 team as of end of last season
+    l1=0.5 # for a bottom team (>=12) losing against to top 4 team as of end of last season with close margin
+    l2=0.5 # for a bottom team (>=12) losing against to top 5-8 team as of end of last season with close margin
+
+    if lst['ResultWL'] >0.5:
+        if lst['PreseasonRankA']<=4:
+            return w1
+        elif lst['PreseasonRankA']<=8:
+            return w2
+        elif lst['PreseasonRankA']<=13:
+            return w3
+        else:
+            return w4   
+    else:
+        if lst['PreseasonRankH']>=12 and lst['PreseasonRankA']<=4 and lst['Result']>=0.42:
+            return l1
+        elif lst['PreseasonRankH']>=12 and lst['PreseasonRankA']<=8 and lst['Result']>=0.42:
+            return l2
+        else:
+            return 0
+def adj_points_away(lst):
+    w1=5.0 # for winning against top4 team as of end of last season
+    w2=4.0 # for winning against top5-8 team as of end of last season
+    w3=3.0 # for winning against 9-13 team as of end of last season
+    w4=2.5 # for winning against 14-18 team as of end of last season
+    l1=0.5 # for a bottom team (>=12) losing against to top 4 team as of end of last season with close margin
+    l2=0.5 # for a bottom team (>=12) losing against to top 5-8 team as of end of last season with close margin
+    if lst['ResultWL'] <0.5:
+        if lst['PreseasonRankH']<=4:
+            return w1
+        elif lst['PreseasonRankH']<=8:
+            return w2
+        elif lst['PreseasonRankH']<=13:
+            return w3
+        else:
+            return w4   
+    else:
+        if lst['PreseasonRankA']>=12 and lst['PreseasonRankH']<=4 and lst['Result']<=0.58:
+            return l1
+        elif lst['PreseasonRankA']>=12 and lst['PreseasonRankH']<=8 and lst['Result']<=0.58:
+            return l2
+        else:
+            return 0
+
+
+# function to create a column with points for this team from either home or away column
+def adj_points_combo(lst):
+    if lst['HomeFlag'] ==1:
+        return lst['PointsHome']
+    else:
+        return lst['PointsAway']
+
+def get_pastXgames(x,team,dt,DF):
+    '''
+    this function gets previous team performance coming to this game
+    takes x(how many games of history), team, date of current game, team stats dataframe to get games prior to this
+
+    '''
+    newDF = DF[(DF['Team']==team) & (DF['Date'] <dt)] 
+    newDF = newDF.sort_values(by=['Date'],ascending=False)
+    newDF = newDF.head(x)
+    newDF = newDF.drop(['Round','GameID','Result','Date','Venue','H','A','ResultWL','PointsHome','PointsAway','PreseasonRankA','PreseasonRankH', 'HomeFlag','Year'],1)
+    newDF = newDF.groupby(by='Team',as_index=False).aggregate('sum')
+    if len(newDF)>0:
+        return newDF.iloc[0]['TeamPoints']
+    else:
+        return 0
+
+def get_game_base(season_from,season_to,proxy=False):
+    '''
+    This function returns does the following:
+    1. Applies adjusted ladder points
+    2. Create separate reacord for each team - home and away teams
+    
+    Output - 2 dataframes:
+    1. games_for_join - has more history beyond the train period (+ 3 seasons)
+    2. train_data - exact train period limited data
+    '''
+    import pandas as pd
+    ladder = get_ladder(seas_from=season_from-3,seas_to=season_to,proxy=False)
+
+    # get latest ladder for each team for each season
+    ladder = ladder.sort_values(by=['Season','Team','Round'])
+    season_end = ladder.groupby(by=['Season','Team'],as_index=False).last()
+    season_end['Season']=[x+1 for x in season_end['Season']]  # enable a join from next seson
+    
+    games = get_games(proxy=False)
+
+    train_data = games[(games['Year']>=season_from-2) & (games['Year']<=season_to)]
+
+    # bring last year ladder at season end - Not including finals
+    games = pd.merge(games,season_end.drop(['Games','Percentage','Points','Round'],1),left_on=['HomeTeam','Year'], right_on=['Team','Season'],how='inner')
+    games = games.drop(['Season','Team'],1)
+    games = pd.merge(games,season_end.drop(['Games','Percentage','Points','Round'],1),left_on=['AwayTeam','Year'], right_on=['Team','Season'],how='inner')
+    games = games.drop(['Season','Team'],1)
+    games = games.rename(columns={"PosOld_x": "PreseasonRankH", "PosOld_y": "PreseasonRankA"})
+
+
+    #Final code to assign adjusted ladder points - best parameters are 5,4,3,2.5,0.5,0.5
+
+    #apply ladder points by rows of games dataframe
+    games['PointsHome'] = games.apply(adj_points_home, axis=1)
+    games['PointsAway'] = games.apply(adj_points_away, axis=1)
+
+    # create a table which makes 2 records out of 1 game for home and away team - this allows sequencing by team and look in the past
+    gm_H = games.copy()
+    gm_H['Team']=gm_H['HomeTeam']
+    gm_H['HomeFlag']=1
+    gm_H = gm_H.drop(['HomeTeam','AwayTeam'], 1)
+
+    gm_A = games.copy()
+    gm_A['Team']=gm_A['AwayTeam']
+    gm_A['HomeFlag']=0
+    gm_A['ResultWL']=1-gm_A['ResultWL'] # reverse outcome
+    gm_A = gm_A.drop(['HomeTeam','AwayTeam'], 1)
+
+    games_for_join = pd.concat([gm_H,gm_A])
+    del gm_H
+    del gm_A
+
+    games_for_join['TeamPoints'] = games_for_join.apply(adj_points_combo, axis=1)
+    return games_for_join,train_data
+
+def adj_ladder(train_data,games_for_join):
+    '''
+    This function iterates over train_data and 
+    applies/calculates adjusted ladder
+    Second dataframe used is longer history version of
+    training_data
+    
+    '''
+    import pandas as pd 
+    # iterate over training data
+    ladder_span = 21  # 21 proven to be the best performance
+    adj_ladder = pd.DataFrame()
+    for i,row in train_data.iterrows():
+        #gm=row['GameID']
+        tm = row['HomeTeam']
+        dt = row['Date']
+
+        new_row = pd.DataFrame(columns=['Date','HomeTeam','AdLadderHm','AdLadderAw'])
+        h= get_pastXgames(ladder_span,row.HomeTeam,row.Date,games_for_join)
+        a= get_pastXgames(ladder_span,row.AwayTeam,row.Date,games_for_join)
+        new_row.loc[0]=[dt,tm,h,a]
+        adj_ladder = pd.concat([ adj_ladder,new_row])    
+    return adj_ladder
+
+
+def rescale_stats(perf_data):
+    '''
+    This function rescales performance metrics
+    according to team sterangth difference
+    Scoring Metrics (Goals and behinds) are not adjusted
+    '''
+    # list of columns to scale is determined by subtraction of ones where no scaling is needed from total list of columns
+    # this allows new metrics to be added (unlikely)
+    column_list = perf_data.columns
+    column_list=column_list.drop(['Round', 'Opponent', 'Team', 'Year', 'Date', 'Venue', 'H', 'A', 'ResultWL',
+           'HomeFlag', 'AdjLadderDiff','GL','BH'])   #Goals and behinds are excluded as they make up the result
+    # scale factors
+    s1=1.3 #for more than 40 points
+    s2=1.1 #for 20-40 points
+    s3=1.05 #for 10-20 points
+
+    # no scale version: comment out when not in use !!!!!!!
+    #s1=1 #for more than 40 points
+    #s2=1 #for 20-40 points
+    #s3=1 #for 10-20 points
+
+    perf_data=perf_data.reset_index(drop=True)
+
+    for index, row in perf_data.iterrows():
+        row=row.copy()
+        ldr = row.AdjLadderDiff
+        if ldr <-40:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]*s1
+        elif ldr <-20:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]*s2
+        elif ldr <-10:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]*s3
+        elif ldr>40:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]/s1
+        elif ldr>20:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]/s2
+        elif ldr>10:
+            for column in column_list:
+                perf_data.loc[index, column] = row[column]/s3
+        else: # away team bump
+            if row.HomeFlag==0:
+                for column in column_list:
+                    perf_data.loc[index, column] = row[column]*s3
+        return perf_data
+
+
+def get_data(season_from,season_to,proxy=False,train_mode=True):
+    '''
+    This function creates a dataset with all necessary adjustments
+    the resulting set can be used for training or scoring
+    leave train_mode=True when creating training set
+    set train_mode=False when scoring/predicting
+    When scoring, you need to have a csv file in the folder
+    When scoring set season_from and season_to to the same season
+    containing Date,HomeTeam,AwayTeam,Venue (assuming Round is not used as variable !!!!!!!)
+    
+    '''
+    import pandas as pd
+
+    if not train_mode:
+        # use CSV
+        score_data = pd.read_csv('D:\\AFL\\ToScore.csv')
+
+        #clean names
+        score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
+        score_data['AwayTeam'] = [fix_team_name(x) for x in score_data.AwayTeam]
+        score_data['Venue'] = [fix_venue(x) for x in score_data.Venue]
+        score_data['Year']=season_to
+        score_data['Date'] = pd.to_datetime(score_data['Date'])
+
+    games_for_join, train_data = get_game_base(season_from=season_from,season_to=season_to,proxy=False)
+    # at this point games_for_join has everything, and it is time to bring history - aka adjusted ladder
+
+    
+    
+    # bring adjusted ladder to main dataset
+    train_data=pd.merge(train_data,adj_ladder(train_data,games_for_join),how='inner',on=['Date','HomeTeam'])
+    train_data['AdjLadderDiff'] = train_data['AdLadderHm'] - train_data['AdLadderAw']
+
+    # get team performance to make adjustments on team strength
+    # relative version
+    team_perf = get_team_performance_hist_rel(season_from=season_from-2,season_to=season_to,proxy=False)
+    # absolute version:
+    #team_perf = get_team_performance_hist(season_from=season_from-2,season_to=season_to,proxy=False)
+
+
+    #bring adjusted ladder difference to use with metrics
+    #idea: if a team is playing gainst a weaker team their metrics should be scaled down
+
+
+    team_perfH = pd.merge(team_perf,train_data[['Date', 'HomeTeam','AdjLadderDiff']],
+                         left_on=['Date', 'Team'],right_on=['Date', 'HomeTeam'])
+    team_perfA = pd.merge(team_perf,train_data[['Date', 'AwayTeam','AdjLadderDiff']],
+                         left_on=['Date', 'Team'],right_on=['Date', 'AwayTeam'])
+
+    team_perfA['AdjLadderDiff'] = [-x for x in team_perfA['AdjLadderDiff']] #reverse for away team
+    team_perf1 = pd.concat([team_perfH,team_perfA],sort=False)
+    team_perf1 = team_perf1.drop(['HomeTeam','AwayTeam'],1)    
+
+    # now need to re-scale metrics according to team strength difference (except scoring ones)
+    team_perf1=rescale_stats(team_perf1)
+
+    #limit dataset to training period (was allowed earlier to grab adj ladder)
+    train_data = train_data[train_data['Year']>=season_from]
+
+    #switch starting point depending on mode
+    if train_mode:
+        data_to_use=train_data.copy()
+    else:
+        data_to_use=score_data.copy()
+
+    # this gets 2 df's for home and away team each for last X games against any oppponent
+    length=15 # how many past games to look at - 15 was obtained as the best option
+    hist_df_hm=pd.DataFrame()
+    hist_df_aw=pd.DataFrame()
+    for i, row in data_to_use.iterrows():
+            hist = get_pastX(dt=row.Date,x=length,team=row.HomeTeam,team_performaceDF=team_perf1)
+            hist['Team']=row.HomeTeam
+            hist['Date']=row.Date
+            hist['Opponent']=row.AwayTeam
+            hist_df_hm=pd.concat([hist_df_hm,hist])
+            hist = get_pastX(dt=row.Date,x=length,team=row.AwayTeam,team_performaceDF=team_perf1)
+            hist['Team']=row.AwayTeam
+            hist['Date']=row.Date
+            #hist['GameID']=row.GameID
+            hist_df_aw=pd.concat([hist_df_aw,hist])
+
+    hist_df_hm=hist_df_hm.reset_index(drop=True)
+    hist_df_aw=hist_df_aw.reset_index(drop=True)
+
+    #columns ignored from get_team_performance function - the absolute ones in this case - keep only differences
+    remove_list=['KIt', 'MKt', 'HBt', 'DIt', 'GLt','BHt', 'HOt', 'TKt', 'RBt', 'IFt','CLt',
+                 'CGt', 'FFt', 'FAt', 'BRt','CPt', 'UPt','CMt', 'MIt', '1%t',
+                 'BOt', 'GAt','SCt','KIo', 'MKo', 'HBo', 'DIo', 'GLo','BHo',
+                 'HOo', 'TKo', 'RBo', 'IFo','CLo', 'CGo', 'FFo', 'FAo', 'BRo',
+                 'CPo', 'UPo', 'CMo', 'MIo', '1%o','BOo', 'GAo','SCo']
+
+    #remove opposition metrics
+    hist_df_hm = hist_df_hm.drop([x+'_lstX' for x in remove_list],1)
+    hist_df_aw = hist_df_aw.drop([x+'_lstX' for x in remove_list],1)
+
+    # tweak to resolve a mistery of AdjLadderDiff disapperiang somethimes
+    if 'AdjLadderDiff_lstX' in hist_df_hm.columns:
+        hist_df_hm=hist_df_hm.drop(['AdjLadderDiff_lstX'],1)
+    if 'AdjLadderDiff_lstX' in hist_df_aw.columns:
+        hist_df_aw=hist_df_aw.drop(['AdjLadderDiff_lstX'],1)
+    
+    # now past metrics averages need to be brought together for each geame to calculate a difference
+    hist_df = pd.merge(hist_df_hm.drop(['H_lstX', 'A_lstX','ResultWL_lstX'],1),
+                       hist_df_aw.drop(['H_lstX', 'A_lstX','ResultWL_lstX'],1),
+                       how='inner',left_on=['Opponent','Date'], right_on=['Team','Date'])
+
+    hist_df = hist_df.drop(['Opponent','Team_y'],1)
+    hist_df = hist_df.rename(columns={'Team_x':'Team'})
+
+    #prepare to calculate differences
+    column_list =['KI_lstX', 'MK_lstX', 'HB_lstX', 'DI_lstX', 'GL_lstX',
+           'BH_lstX', 'HO_lstX', 'TK_lstX', 'RB_lstX', 'IF_lstX',
+           'CL_lstX', 'CG_lstX', 'FF_lstX', 'FA_lstX', 'BR_lstX',
+           'CP_lstX', 'UP_lstX', 'CM_lstX', 'MI_lstX', '1%_lstX',
+           'BO_lstX', 'GA_lstX','SC_lstX']
+    #calculate differences and drop original columns
+    for col in column_list:
+        hist_df[col] = [a-b for a,b in zip(hist_df[col+'_x'],hist_df[col+'_y'])]
+        hist_df = hist_df.drop(col+'_x',1)
+        hist_df = hist_df.drop(col+'_y',1)
+
+    # add to training set - strength adjusted past stats
+    train_data1= pd.merge(data_to_use,hist_df,left_on=['HomeTeam','Date'],right_on=['Team','Date'])
+    train_data1 = train_data1.drop(['Team'],1)
+    # this gets 2 df's for home and away team each for last X games at this GROUND
+    length=10 # how many past games to look at 
+    hist_df_hm=pd.DataFrame()
+    hist_df_aw=pd.DataFrame()
+    for i, row in data_to_use.iterrows():
+            hist = get_pastXground(dt=row.Date,x=length,team=row.HomeTeam,venue=row.Venue,team_performaceDF=team_perf1)
+            hist['Team']=row.HomeTeam
+            hist['Date']=row.Date
+            hist['Opponent']=row.AwayTeam
+            #hist['GameID']=row.GameID
+            hist_df_hm=pd.concat([hist_df_hm,hist])
+            hist = get_pastXground(dt=row.Date,x=length,team=row.AwayTeam,venue=row.Venue,team_performaceDF=team_perf1)
+            hist['Team']=row.AwayTeam
+            hist['Date']=row.Date
+            #hist['GameID']=row.GameID
+            hist_df_aw=pd.concat([hist_df_aw,hist])
+
+    hist_df_hm=hist_df_hm.reset_index(drop=True)
+    hist_df_aw=hist_df_aw.reset_index(drop=True)
+
+    #remove opposition metrics
+    hist_df_hm = hist_df_hm.drop([x+'_lstXgrd' for x in remove_list],1)
+    hist_df_aw = hist_df_aw.drop([x+'_lstXgrd' for x in remove_list],1)
+
+    # tweak to resolve a mistery of AdjLadderDiff disapperiang somethimes
+    if 'AdjLadderDiff_lstXgrd' in hist_df_hm.columns:
+        hist_df_hm=hist_df_hm.drop(['AdjLadderDiff_lstXgrd'],1)
+    if 'AdjLadderDiff_lstXgrd' in hist_df_aw.columns:
+        hist_df_aw=hist_df_aw.drop(['AdjLadderDiff_lstXgrd'],1)
+   
+    
+    # now past metrics averages need to be brought together for each geame to calculate a difference
+    hist_df = pd.merge(hist_df_hm.drop(['H_lstXgrd', 'A_lstXgrd','ResultWL_lstXgrd'],1),
+                       hist_df_aw.drop(['H_lstXgrd', 'A_lstXgrd','ResultWL_lstXgrd'],1),
+                       how='inner',left_on=['Opponent','Date'], right_on=['Team','Date'])
+    hist_df = hist_df.drop(['Opponent','Team_y'],1)
+    hist_df = hist_df.rename(columns={'Team_x':'Team'})
+
+    #prepare to calculate differences
+    column_list =['KI_lstXgrd', 'MK_lstXgrd', 'HB_lstXgrd', 'DI_lstXgrd', 'GL_lstXgrd',
+           'BH_lstXgrd', 'HO_lstXgrd', 'TK_lstXgrd', 'RB_lstXgrd', 'IF_lstXgrd',
+           'CL_lstXgrd', 'CG_lstXgrd', 'FF_lstXgrd', 'FA_lstXgrd', 'BR_lstXgrd',
+           'CP_lstXgrd', 'UP_lstXgrd', 'CM_lstXgrd', 'MI_lstXgrd', '1%_lstXgrd',
+           'BO_lstXgrd', 'GA_lstXgrd','SC_lstXgrd']
+    #calculate differences and drop original columns
+    for col in column_list:
+        hist_df[col] = [a-b for a,b in zip(hist_df[col+'_x'],hist_df[col+'_y'])]
+        hist_df = hist_df.drop(col+'_x',1)
+        hist_df = hist_df.drop(col+'_y',1)
+
+    # add to training set - strength adjusted past stats
+    train_data2= pd.merge(train_data1,hist_df,how='left',left_on=['HomeTeam','Date'],right_on=['Team','Date'])
+    train_data2 = train_data2.drop(['Team'],1)
+    # This opponent
+    # this gets 2 df's for home and away team each for last X games with this opponent
+    length=5 # how many past games to look at hist_df_hm=pd.DataFrame()
+    hist_df_hm=pd.DataFrame()
+    hist_df_aw=pd.DataFrame()
+    for i, row in data_to_use.iterrows():
+            hist = get_pastXthis_opponent(dt=row.Date,x=length,team=row.HomeTeam,opponent=row.AwayTeam,team_performaceDF=team_perf1)
+            hist['Team']=row.HomeTeam
+            hist['Date']=row.Date
+            hist['Opponent']=row.AwayTeam
+            #hist['GameID']=row.GameID
+            hist_df_hm=pd.concat([hist_df_hm,hist])
+            hist = get_pastXthis_opponent(dt=row.Date,x=length,team=row.AwayTeam,opponent=row.HomeTeam,team_performaceDF=team_perf1)
+            hist['Team']=row.AwayTeam
+            hist['Date']=row.Date
+            #hist['GameID']=row.GameID
+            hist_df_aw=pd.concat([hist_df_aw,hist])
+
+    hist_df_hm=hist_df_hm.reset_index(drop=True)
+    hist_df_aw=hist_df_aw.reset_index(drop=True)
+
+    #remove opposition metrics
+    hist_df_hm = hist_df_hm.drop([x+'_lstXopp' for x in remove_list],1)
+    hist_df_aw = hist_df_aw.drop([x+'_lstXopp' for x in remove_list],1)
+
+    # tweak to resolve a mistery of AdjLadderDiff disapperiang somethimes
+    if 'AdjLadderDiff_lstXopp' in hist_df_hm.columns:
+        hist_df_hm=hist_df_hm.drop(['AdjLadderDiff_lstXopp'],1)
+    if 'AdjLadderDiff_lstXopp' in hist_df_aw.columns:
+        hist_df_aw=hist_df_aw.drop(['AdjLadderDiff_lstXopp'],1)
+   
+    
+    # now past metrics averages need to be brought together for each geame to calculate a difference
+    hist_df = pd.merge(hist_df_hm.drop(['H_lstXopp', 'A_lstXopp', 'ResultWL_lstXopp'],1),
+                       hist_df_aw.drop(['H_lstXopp', 'A_lstXopp', 'ResultWL_lstXopp'],1),
+                       how='inner',left_on=['Opponent','Date'], right_on=['Team','Date'])
+    hist_df = hist_df.drop(['Opponent','Team_y'],1)
+    hist_df = hist_df.rename(columns={'Team_x':'Team'})
+    #prepare to calculate differences
+    column_list =['KI_lstXopp', 'MK_lstXopp', 'HB_lstXopp', 'DI_lstXopp', 'GL_lstXopp',
+           'BH_lstXopp', 'HO_lstXopp', 'TK_lstXopp', 'RB_lstXopp', 'IF_lstXopp',
+           'CL_lstXopp', 'CG_lstXopp', 'FF_lstXopp', 'FA_lstXopp', 'BR_lstXopp',
+           'CP_lstXopp', 'UP_lstXopp', 'CM_lstXopp', 'MI_lstXopp', '1%_lstXopp',
+           'BO_lstXopp', 'GA_lstXopp','SC_lstXopp']
+    #calculate differences and drop original columns
+    for col in column_list:
+        hist_df[col] = [a-b for a,b in zip(hist_df[col+'_x'],hist_df[col+'_y'])]
+        hist_df = hist_df.drop(col+'_x',1)
+        hist_df = hist_df.drop(col+'_y',1)
+
+    # add to training set - strength adjusted past stats
+    train_data3= train_data2.merge(hist_df,how='left',left_on=['HomeTeam','Date'],right_on=['Team','Date'])
+    train_data3 = train_data3.drop(['Team'],1)
+    # now change na to 0.0
+    train_data3 = train_data3.fillna(0)
+
+    return train_data3
