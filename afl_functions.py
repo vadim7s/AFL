@@ -1,5 +1,5 @@
-# 3 September 2018 Adding a combined function to get dataset for training or scoring
-
+# 12 September 2018 Adding a combined function to get dataset for training or scoring
+# fixed the issue with adjusted ladder
 
 def get_drive():
     '''
@@ -23,7 +23,7 @@ def get_proxy(proxy):
         if proxy:
             from os import environ
             #pwd = input('Please enter your LAN Pwd')
-            environ["http_proxy"]="http://c819325:sWeater78-@http-gw.tcif.telstra.com.au:8080"
+            environ["http_proxy"]="http://c819325:kEepcup78-@http-gw.tcif.telstra.com.au:8080"
             environ["https_proxy"]=environ.get("http_proxy")
         return None
 
@@ -1282,8 +1282,12 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     if train_mode:
         data_to_use=train_data.copy()
     else:
+        score_data1 = adj_ladder(train_data=score_data,games_for_join=games_for_join)
+        score_data1['AdjLadderDiff'] = score_data1['AdLadderHm'] - score_data1['AdLadderAw']
+        score_data1 = score_data1.drop(['AdLadderHm','AdLadderAw'],1)
+        score_data = score_data.merge(score_data1, how='inner', on = ['Date', 'HomeTeam'])
         data_to_use=score_data.copy()
-
+    
     # this gets 2 df's for home and away team each for last X games against any oppponent
     length=15 # how many past games to look at - 15 was obtained as the best option
     hist_df_hm=pd.DataFrame()
