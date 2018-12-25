@@ -1,6 +1,3 @@
-# 12 September 2018 Adding a combined function to get dataset for training or scoring
-# fixed the issue with adjusted ladder
-
 def get_drive():
     '''
     this is to automate switching between home PC and laptop
@@ -23,7 +20,7 @@ def get_proxy(proxy):
         if proxy:
             from os import environ
             #pwd = input('Please enter your LAN Pwd')
-            environ["http_proxy"]="http://c819325:kEepcup78-@http-gw.tcif.telstra.com.au:8080"
+            environ["http_proxy"]="http://c819325:kEepcupr78-@http-gw.tcif.telstra.com.au:8080"
             environ["https_proxy"]=environ.get("http_proxy")
         return None
 
@@ -158,6 +155,8 @@ def fix_venue(name):
         ground='Adelaide Oval'
     elif name=='Adelaide':
         ground='Adelaide Oval'
+    elif name=='AO':
+        ground='Adelaide Oval'
     elif name=='Aurora':
         ground = 'York Park'
     elif name=='Blacktown':
@@ -172,6 +171,8 @@ def fix_venue(name):
         ground='Subiaco'
     elif name=='Etihad Stadium':
         ground = 'Docklands'
+    elif name=='MRVL':
+        ground = 'Docklands'
     elif name=='Etihad':
         ground = 'Docklands'
     elif name=='GMHBA Stadium':
@@ -179,6 +180,8 @@ def fix_venue(name):
     elif name=='GMHBA':
         ground='Kardinia Park'
     elif name=='Gabba':
+        ground = 'Gabba'
+    elif name=='G':
         ground = 'Gabba'
     elif name=='Jiangwan':
         ground = 'Jiangwan Stadium'
@@ -200,9 +203,13 @@ def fix_venue(name):
         ground='Perth Stadium'
     elif name=='Subiaco':
         ground='Perth Stadium'
+    elif name=='OS':
+        ground='Perth Stadium'
     elif name=='SCG':
         ground='S.C.G.'
     elif name=='Spotless Stadium':
+        ground='Sydney Showground'
+    elif name=='SSGS':
         ground='Sydney Showground'
     elif name=='Spotless':
         ground='Sydney Showground'
@@ -1095,7 +1102,7 @@ def get_game_base(season_from,season_to,proxy=False):
     2. Create separate reacord for each team - home and away teams
     
     Output - 2 dataframes:
-    1. games_for_join - has more history beyond the train period (+ 3 seasons)
+    1. games_for_join - one team -sided version and  has more history beyond the train period (+ 3 seasons)
     2. train_data - exact train period limited data
     '''
     import pandas as pd
@@ -1107,7 +1114,8 @@ def get_game_base(season_from,season_to,proxy=False):
     season_end['Season']=[x+1 for x in season_end['Season']]  # enable a join from next seson
     
     games = get_games(proxy=False)
-
+    
+    
     train_data = games[(games['Year']>=season_from-2) & (games['Year']<=season_to)]
 
     # bring last year ladder at season end - Not including finals
@@ -1234,7 +1242,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
 
     if not train_mode:
         # use CSV
-        score_data = pd.read_csv('D:\\AFL\\ToScore.csv')
+        score_data = pd.read_csv('J:\\AFL\\ToScore.csv')
 
         #clean names
         score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
@@ -1455,5 +1463,69 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3 = train_data3.drop(['Team'],1)
     # now change na to 0.0
     train_data3 = train_data3.fillna(0)
+    
+    # home away factor - maintained in the csv
+    hm_aw = pd.read_csv('J:\\AFL\\HmAwDisadvantage.csv')
+    train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['HomeTeam','Venue'],right_on=['Team','Venue'])
+    train_data3=train_data3.rename(columns={'HA_Disadvantage':'H_Disadv'})
+    train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['AwayTeam','Venue'],right_on=['Team','Venue'])
+    train_data3=train_data3.rename(columns={'HA_Disadvantage':'A_Disadv'})
+    train_data3['HmAwDisadvantage']=[x-y for (x,y) in zip(train_data3['H_Disadv'],train_data3['A_Disadv'])]
+    train_data3 = train_data3.drop(['H_Disadv','A_Disadv','Team_x', 'Team_y'],1)
 
     return train_data3
+
+def get_fixtureAFL():
+    '''
+    this function grabs Fixture from AFL.com.au website
+    note, it should be tested during a season to see what comes back 
+    i.e. current round only or more
+    
+    '''
+    import requests
+    from bs4 import BeautifulSoup
+    import json
+    import pandas as pd
+
+
+    fixture = pd.DataFrame()
+
+    # Usual code to get the website - Use requests, it's much easier
+    url = 'http://www.afl.com.au/fixture'
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, 'html.parser')
+
+    # lets get the div that containts the script
+    fixtures_container = soup.find("div", {"class": "o-main-container__fixture"})
+
+    # Lets get the script in the div and just output the text
+    script = fixtures_container.find('script2').text
+
+    # Lets get hacky and remove the first bit of crap data
+    clean_data = script.replace("\n    window.byClubData = ","")
+
+    # Here is your JSON data. Happy days
+    json_data = json.loads(clean_data)
+
+    i=1
+    for data in json_data['fixtures']:
+        aw =data.get('awayTeam','')
+        aw_team=aw.get('teamName','')
+
+        hm =data.get('homeTeam','')
+        hm_team=hm.get('teamName','')
+
+        mtch = data.get('match','')
+
+        rnd= mtch.get('roundNumber','')
+        venue = mtch.get('venueAbbr','')
+        dts= mtch.get('startDateTimes','')
+
+        date = str(dts[0])[25:35]
+
+
+        new_row = pd.DataFrame(columns=['Round','GameNo','HomeTeam','AwayTeam','Venue','Date'])
+        new_row.loc[0]=[rnd,i,fix_team_name(hm_team),fix_team_name(aw_team),fix_venue(venue),date]
+        fixture = pd.concat([fixture,new_row])        
+        i+=1
+    return fixture
