@@ -12,7 +12,7 @@ def get_drive():
     if 'D:\\' in drives:
         drive = 'D:\\AFL\\'
     else:
-        drive = 'J:\\AFL\\'
+        drive = 'C:\\Users\\vshumilov\\AFL-master'
     return drive
 
 
@@ -20,7 +20,7 @@ def get_proxy(proxy):
         if proxy:
             from os import environ
             #pwd = input('Please enter your LAN Pwd')
-            environ["http_proxy"]="http://c819325:kEepcupr78-@http-gw.tcif.telstra.com.au:8080"
+            environ["http_proxy"]="http://vshumilov:lAptop78-@http://kpmgproxy.com/kpmgproxy.pac:8080"
             environ["https_proxy"]=environ.get("http_proxy")
         return None
 
@@ -1242,7 +1242,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
 
     if not train_mode:
         # use CSV
-        score_data = pd.read_csv('J:\\AFL\\ToScore.csv')
+        score_data = pd.read_csv('C:\\Users\\vshumilov\\AFL-master\\ToScore.csv')
 
         #clean names
         score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
@@ -1465,7 +1465,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3 = train_data3.fillna(0)
     
     # home away factor - maintained in the csv
-    hm_aw = pd.read_csv('J:\\AFL\\HmAwDisadvantage.csv')
+    hm_aw = pd.read_csv('C:\\Users\\vshumilov\\AFL-master\\HmAwDisadvantage.csv')
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['HomeTeam','Venue'],right_on=['Team','Venue'])
     train_data3=train_data3.rename(columns={'HA_Disadvantage':'H_Disadv'})
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['AwayTeam','Venue'],right_on=['Team','Venue'])
@@ -1521,7 +1521,7 @@ def get_fixtureAFL():
         venue = mtch.get('venueAbbr','')
         dts= mtch.get('startDateTimes','')
 
-        date = str(dts[0])[25:35]
+        date = dts[0].get("date")
 
 
         new_row = pd.DataFrame(columns=['Round','GameNo','HomeTeam','AwayTeam','Venue','Date'])
