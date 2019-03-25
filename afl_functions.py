@@ -171,6 +171,8 @@ def fix_venue(name):
         ground='Subiaco'
     elif name=='Etihad Stadium':
         ground = 'Docklands'
+    elif name=='MS':
+        ground = 'Docklands'
     elif name=='MRVL':
         ground = 'Docklands'
     elif name=='Etihad':
@@ -1242,7 +1244,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
 
     if not train_mode:
         # use CSV
-        score_data = pd.read_csv('C:\\Users\\vshumilov\\AFL-master\\ToScore.csv')
+        score_data = pd.read_csv('J:\\AFL\\ToScore.csv')
 
         #clean names
         score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
@@ -1465,7 +1467,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3 = train_data3.fillna(0)
     
     # home away factor - maintained in the csv
-    hm_aw = pd.read_csv('C:\\Users\\vshumilov\\AFL-master\\HmAwDisadvantage.csv')
+    hm_aw = pd.read_csv('J:\\AFL\\HmAwDisadvantage.csv')
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['HomeTeam','Venue'],right_on=['Team','Venue'])
     train_data3=train_data3.rename(columns={'HA_Disadvantage':'H_Disadv'})
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['AwayTeam','Venue'],right_on=['Team','Venue'])
