@@ -1265,6 +1265,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     # get team performance to make adjustments on team strength
     # relative version
     team_perf = get_team_performance_hist_rel(season_from=season_from-2,season_to=season_to,proxy=False)
+    print('Max date in performance data: ',team_perf['Date'].max())
     # absolute version:
     #team_perf = get_team_performance_hist(season_from=season_from-2,season_to=season_to,proxy=False)
 
