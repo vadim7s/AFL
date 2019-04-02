@@ -1,18 +1,12 @@
 def get_drive():
     '''
-    this is to automate switching between home PC and laptop
-    it returns J:\\AFL\\ or D:\\AFL\\ depending if D:\ is available
+    this is to make switching between different PC's 
+    it asks user to enter a path with working folder
     
     No parameters required
     '''
     
-    import win32api
-    drives = win32api.GetLogicalDriveStrings()
-    drives = drives.split('\000')[:-1]
-    if 'D:\\' in drives:
-        drive = 'D:\\AFL\\'
-    else:
-        drive = 'C:\\Users\\vshumilov\\AFL-master'
+    drive = input('Please enter the path to the working folder/directory like J:\\AFL\\')
     return drive
 
 
@@ -206,6 +200,8 @@ def fix_venue(name):
     elif name=='Subiaco':
         ground='Perth Stadium'
     elif name=='OS':
+        ground='Perth Stadium'
+    elif name=='Optus Stadium':
         ground='Perth Stadium'
     elif name=='SCG':
         ground='S.C.G.'
@@ -1155,9 +1151,8 @@ def get_game_base(season_from,season_to,proxy=False):
 
 def adj_ladder(train_data,games_for_join):
     '''
-    This function iterates over train_data and 
-    applies/calculates adjusted ladder
-    Second dataframe used is longer history version of
+    This function iterates over train_data and applies/calculates 
+    adjusted ladder. Second dataframe used is a longer history version of
     training_data
     
     '''
@@ -1241,10 +1236,10 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     
     '''
     import pandas as pd
-
+    path = get_drive()
     if not train_mode:
         # use CSV
-        score_data = pd.read_csv('J:\\AFL\\ToScore.csv')
+        score_data = pd.read_csv(path+'ToScore.csv')
 
         #clean names
         score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
@@ -1468,7 +1463,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3 = train_data3.fillna(0)
     
     # home away factor - maintained in the csv
-    hm_aw = pd.read_csv('J:\\AFL\\HmAwDisadvantage.csv')
+    hm_aw = pd.read_csv(path+'HmAwDisadvantage.csv')
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['HomeTeam','Venue'],right_on=['Team','Venue'])
     train_data3=train_data3.rename(columns={'HA_Disadvantage':'H_Disadv'})
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['AwayTeam','Venue'],right_on=['Team','Venue'])
@@ -1476,7 +1471,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3['HmAwDisadvantage']=[x-y for (x,y) in zip(train_data3['H_Disadv'],train_data3['A_Disadv'])]
     train_data3 = train_data3.drop(['H_Disadv','A_Disadv','Team_x', 'Team_y'],1)
 
-    return train_data3
+    return train_data3, path
 
 def get_fixtureAFL():
     '''
