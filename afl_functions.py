@@ -1289,6 +1289,8 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
         data_to_use=train_data.copy()
     else:
         score_data1 = adj_ladder(train_data=score_data,games_for_join=games_for_join)
+        print('Adjusted Ladder for upcoming game teams:')
+        print(score_data1)
         score_data1['AdjLadderDiff'] = score_data1['AdLadderHm'] - score_data1['AdLadderAw']
         score_data1 = score_data1.drop(['AdLadderHm','AdLadderAw'],1)
         score_data = score_data.merge(score_data1, how='inner', on = ['Date', 'HomeTeam'])
