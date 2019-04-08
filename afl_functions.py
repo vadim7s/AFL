@@ -499,6 +499,10 @@ def get_team_performance_hist(season_from,season_to,proxy=False):
             if i % 2==0:
                 x= pd.concat([dfs[i],dfs[i+1].drop(['#','Opponent'],1)],1)
                 x['Team']=tms[i]
+                # correction April 7 2019 remove empty columns
+                cols = [c for c in x.columns if c.lower()[:4] != 'unna']
+                x=x[cols]
+                # end of 7 Apr 2019 correction
                 all_dfs = pd.concat([all_dfs, x])
         all_dfs=all_dfs[all_dfs['#'] != 'W-D-L']
         all_dfs['Year']=season
@@ -639,6 +643,10 @@ def get_team_performance_hist_rel(season_from,season_to,proxy=False):
             if i % 2==0:
                 x= pd.concat([dfs[i],dfs[i+1].drop(['#','Opponent'],1)],1)
                 x['Team']=tms[i]
+                # correction 7 Apr 2019 - remove empty Unnamed columns
+                cols = [c for c in x.columns if c.lower()[:4] != 'unna']
+                x=x[cols]
+                # end of correction 7 Apr 2019
                 all_dfs = pd.concat([all_dfs, x])
         all_dfs=all_dfs[all_dfs['#'] != 'W-D-L']
         all_dfs['Year']=season
