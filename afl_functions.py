@@ -503,6 +503,8 @@ def get_team_performance_hist(season_from,season_to,proxy=False):
             if i % 2==0:
                 x= pd.concat([dfs[i],dfs[i+1].drop(['#','Opponent'],1)],1)
                 x['Team']=tms[i]
+                cols = [c for c in x.columns if c.lower()[:4] != 'unna']
+                x=x[cols]
                 all_dfs = pd.concat([all_dfs, x])
         all_dfs=all_dfs[all_dfs['#'] != 'W-D-L']
         all_dfs['Year']=season
@@ -643,6 +645,8 @@ def get_team_performance_hist_rel(season_from,season_to,proxy=False):
             if i % 2==0:
                 x= pd.concat([dfs[i],dfs[i+1].drop(['#','Opponent'],1)],1)
                 x['Team']=tms[i]
+                cols = [c for c in x.columns if c.lower()[:4] != 'unna']
+                x=x[cols]
                 all_dfs = pd.concat([all_dfs, x])
         all_dfs=all_dfs[all_dfs['#'] != 'W-D-L']
         all_dfs['Year']=season
@@ -1244,7 +1248,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
 
     if not train_mode:
         # use CSV
-        score_data = pd.read_csv('J:\\AFL\\ToScore.csv')
+        score_data = pd.read_csv('C:\\Users\\shumi\\Git\\AFL\\ToScore.csv')
 
         #clean names
         score_data['HomeTeam'] = [fix_team_name(x) for x in score_data.HomeTeam]
@@ -1468,7 +1472,7 @@ def get_data(season_from,season_to,proxy=False,train_mode=True):
     train_data3 = train_data3.fillna(0)
     
     # home away factor - maintained in the csv
-    hm_aw = pd.read_csv('J:\\AFL\\HmAwDisadvantage.csv')
+    hm_aw = pd.read_csv('C:\\Users\\shumi\\Git\\AFL\\HmAwDisadvantage.csv')
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['HomeTeam','Venue'],right_on=['Team','Venue'])
     train_data3=train_data3.rename(columns={'HA_Disadvantage':'H_Disadv'})
     train_data3 = pd.merge(train_data3,hm_aw,how='inner',left_on=['AwayTeam','Venue'],right_on=['Team','Venue'])
