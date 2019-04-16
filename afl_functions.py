@@ -9,10 +9,10 @@ def get_drive():
     import win32api
     drives = win32api.GetLogicalDriveStrings()
     drives = drives.split('\000')[:-1]
-    if 'D:\\' in drives:
-        drive = 'D:\\AFL\\'
+    if 'J:\\' in drives:
+        drive = 'J:\\AFL\\'
     else:
-        drive = 'C:\\Users\\vshumilov\\AFL-master'
+        drive = 'C:\\Users\\shumi\\Git\\AFL\\'
     return drive
 
 
@@ -216,6 +216,8 @@ def fix_venue(name):
     elif name=='Spotless':
         ground='Sydney Showground'
     elif name=='UNSW Canberra Oval':
+        ground='Manuka Oval'
+    elif name=='MO':
         ground='Manuka Oval'
     elif name=='StarTrack':
         ground='Manuka Oval'
