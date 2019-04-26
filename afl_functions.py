@@ -1426,6 +1426,7 @@ def get_fixtureAFL():
 
 #function to get last X player performance metrics 
 def player_last_X(url,x,season,rnd,df):
+    import numpy as np
     '''
     this function produces latest x performances for a given player 
     prior to this round - e.g. last 20 for player P before this round
