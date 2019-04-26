@@ -1423,3 +1423,71 @@ def get_fixtureAFL():
         fixture = pd.concat([fixture,new_row])        
         i+=1
     return fixture
+
+#function to get last X player performance metrics 
+def player_last_X(url,x,season,rnd,df):
+    '''
+    this function produces latest x performances for a given player 
+    prior to this round - e.g. last 20 for player P before this round
+    Returns df of metrics in ORDER of latest game first (DESC)
+    url - player url on afltables.com
+    x - how many games of past performance you need
+    season & rnd - what is the season & round the current game is
+    (prior to which you need the stats)
+    df - performance dataframe to get the stats from
+    '''
+    df_player = df[(df['Url']==url)]   # extract player
+    df_player = df_player[(df_player['Year']<season) | ((df_player['Year']==season) & (df_player['Round']<rnd))] # extract prior games
+    df_player = df_player.sort_values(by=['Date'],ascending=False)
+    df_player = df_player.head(x)
+    # one-hot encoding venues could be done later
+    '''
+    df_player['Adelaide Oval']= np.where(df_player['Venue']=='Adelaide Oval', 1, 0)
+    df_player['Bellerive Oval']= np.where(df_player['Venue']=='Bellerive Oval', 1, 0)
+    df_player['Bruce Stadium']= np.where(df_player['Venue']=='Bruce Stadium', 1, 0)
+    df_player['Carrara']= np.where(df_player['Venue']=='Carrara', 1, 0)
+    df_player["Cazaly's Stadium"]= np.where(df_player['Venue']=="Cazaly's Stadium", 1, 0)
+    df_player['Docklands']= np.where(df_player['Venue']=='Docklands', 1, 0)
+    df_player['Eureka Stadium']= np.where(df_player['Venue']=='Eureka Stadium', 1, 0)
+    df_player['Gabba']= np.where(df_player['Venue']=='Gabba', 1, 0)
+    df_player['Jiangwan Stadium']= np.where(df_player['Venue']=='Jiangwan Stadium', 1, 0)
+    df_player['Kardinia Park']= np.where(df_player['Venue']=='Kardinia Park', 1, 0)
+    df_player['M.C.G.']= np.where(df_player['Venue']=='M.C.G.', 1, 0)
+    df_player['Manuka Oval']= np.where(df_player['Venue']=='Manuka Oval', 1, 0)
+    df_player['Marrara Oval']= np.where(df_player['Venue']=='Marrara Oval', 1, 0)
+    df_player['North Hobart']= np.where(df_player['Venue']=='North Hobart', 1, 0)
+    df_player['Perth Stadium']= np.where(df_player['Venue']=='Perth Stadium', 1, 0)
+    df_player['S.C.G.']= np.where(df_player['Venue']=='S.C.G.', 1, 0)
+    df_player['Stadium Australia']= np.where(df_player['Venue']=='Stadium Australia', 1, 0)
+    df_player['Sydney Showground']= np.where(df_player['Venue']=='Sydney Showground', 1, 0)
+    df_player['Traeger Park']= np.where(df_player['Venue']=='Traeger Park', 1, 0)
+    df_player['Wellington']= np.where(df_player['Venue']=='Wellington', 1, 0)
+    df_player['York Park']= np.where(df_player['Venue']=='York Park', 1, 0)
+    df_player['Blacktown']= np.where(df_player['Venue']=='Blacktown', 1, 0)
+    df_player=df_player.drop(['Venue'],1)    
+    '''
+    # opponent encoding
+    df_player['Adelaide']= np.where(df_player['Opponent']=='Adelaide', 1, 0)
+    df_player['Brisbane Lions']= np.where(df_player['Opponent']=='Brisbane Lions', 1, 0)
+    df_player['Carlton']= np.where(df_player['Opponent']=='Carlton', 1, 0)
+    df_player['Collingwood']= np.where(df_player['Opponent']=='Collingwood', 1, 0)
+    df_player['Essendon']= np.where(df_player['Opponent']=='Essendon', 1, 0)
+    df_player['Fremantle']= np.where(df_player['Opponent']=='Fremantle', 1, 0)
+    df_player['Geelong']= np.where(df_player['Opponent']=='Geelong', 1, 0)
+    df_player['Gold Coast']= np.where(df_player['Opponent']=='Gold Coast', 1, 0)
+    df_player['Greater Western Sydney']= np.where(df_player['Opponent']=='Greater Western Sydney', 1, 0)
+    df_player['Hawthorn']= np.where(df_player['Opponent']=='Hawthorn', 1, 0)
+    df_player['Melbourne']= np.where(df_player['Opponent']=='Melbourne', 1, 0)
+    df_player['North Melbourne']= np.where(df_player['Opponent']=='North Melbourne', 1, 0)
+    df_player['Port Adelaide']= np.where(df_player['Opponent']=='Port Adelaide', 1, 0)
+    df_player['Richmond']= np.where(df_player['Opponent']=='Richmond', 1, 0)
+    df_player['St Kilda']= np.where(df_player['Opponent']=='St Kilda', 1, 0)
+    df_player['Sydney']= np.where(df_player['Opponent']=='Sydney', 1, 0)
+    df_player['West Coast']= np.where(df_player['Opponent']=='West Coast', 1, 0)
+    df_player['Western Bulldogs']= np.where(df_player['Opponent']=='Western Bulldogs', 1, 0)
+    
+    df_player=df_player.drop(['Opponent'],1) 
+    #drop other columns
+    df_player=df_player.drop(['GameID','Result','H','A','GameNo','Jersey'],1)
+    df_player = df_player.rename(columns={'Year': 'Year_hist', 'Round': 'Round_hist', 'Date': 'Date_hist','Team':'Team_hist'})
+    return df_player
