@@ -193,6 +193,8 @@ def fix_venue(name):
         ground = 'M.C.G.'
     elif name=='MCG':
         ground = 'M.C.G.'
+    elif name=='MARS':
+        ground = 'Eureka Stadium'
     elif name=='Mars Stadium, Ballarat':
         ground = 'Eureka Stadium'
     elif name=='Mars':
