@@ -163,6 +163,8 @@ def fix_venue(name):
         ground='Blacktown'
     elif name=='Blundstone Arena':
         ground = 'Bellerive Oval'
+    elif name=='BA':
+        ground = 'Bellerive Oval'
     elif name=='Blundstone':
         ground = 'Bellerive Oval'
     elif name=="Cazaly's":
@@ -185,6 +187,8 @@ def fix_venue(name):
         ground = 'Gabba'
     elif name=='G':
         ground = 'Gabba'
+    elif name=='AAJS':
+        ground = 'Jiangwan Stadium'
     elif name=='Jiangwan':
         ground = 'Jiangwan Stadium'
     elif name=='Jiangwan Stadium, China':
@@ -211,6 +215,8 @@ def fix_venue(name):
         ground='Perth Stadium'
     elif name=='SCG':
         ground='S.C.G.'
+    elif name=='GIA':
+        ground='Sydney Showground'
     elif name=='Spotless Stadium':
         ground='Sydney Showground'
     elif name=='SSGS':

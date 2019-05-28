@@ -1,0 +1,278 @@
+Team,Venue,HA_Disadvantage
+Adelaide,Adelaide Oval,0
+Adelaide,Bellerive Oval,0.5
+Adelaide,Carrara,1
+Adelaide,Docklands,1
+Adelaide,Football Park,0
+Adelaide,Gabba,1
+Adelaide,Kardinia Park,1
+Adelaide,M.C.G.,1
+Adelaide,Manuka Oval,1
+Adelaide,Marrara Oval,0.5
+Adelaide,Perth Stadium,1
+Adelaide,S.C.G.,1
+Adelaide,Subiaco,1
+Adelaide,Sydney Showground,1
+Adelaide,Traeger Park,0
+Adelaide,York Park,0.5
+Brisbane Lions,Adelaide Oval,1
+Brisbane Lions,Carrara,0.5
+Brisbane Lions,Docklands,1
+Brisbane Lions,Football Park,1
+Brisbane Lions,Gabba,0
+Brisbane Lions,Kardinia Park,1
+Brisbane Lions,M.C.G.,1
+Brisbane Lions,Marrara Oval,0
+Brisbane Lions,Perth Stadium,1
+Brisbane Lions,S.C.G.,1
+Brisbane Lions,Stadium Australia,1
+Brisbane Lions,Subiaco,1
+Brisbane Lions,Sydney Showground,1
+Brisbane Lions,Wellington,0
+Brisbane Lions,York Park,0.5
+Brisbane Lions,Eureka Stadium,1
+Carlton,Adelaide Oval,1
+Carlton,Bellerive Oval,0.5
+Carlton,Carrara,1
+Carlton,Docklands,0
+Carlton,Football Park,1
+Carlton,Gabba,1
+Carlton,Kardinia Park,0.5
+Carlton,M.C.G.,0
+Carlton,Perth Stadium,1
+Carlton,S.C.G.,1
+Carlton,Stadium Australia,1
+Carlton,Subiaco,1
+Carlton,Sydney Showground,1
+Carlton,Wellington,0
+Carlton,York Park,0.5
+Collingwood,Adelaide Oval,1
+Collingwood,Carrara,1
+Collingwood,Docklands,0
+Collingwood,Football Park,1
+Collingwood,Gabba,1
+Collingwood,M.C.G.,0
+Collingwood,Perth Stadium,1
+Collingwood,S.C.G.,1
+Collingwood,Stadium Australia,1
+Collingwood,Subiaco,1
+Collingwood,Sydney Showground,1
+Essendon,Adelaide Oval,1
+Essendon,Carrara,1
+Essendon,Docklands,0
+Essendon,Football Park,1
+Essendon,Gabba,1
+Essendon,M.C.G.,0
+Essendon,Perth Stadium,1
+Essendon,S.C.G.,1
+Essendon,Stadium Australia,1
+Essendon,Subiaco,1
+Essendon,Sydney Showground,1
+Fremantle,Adelaide Oval,1
+Fremantle,Carrara,1
+Fremantle,Docklands,1
+Fremantle,Football Park,1
+Fremantle,Gabba,1
+Fremantle,Kardinia Park,1
+Fremantle,M.C.G.,1
+Fremantle,Manuka Oval,0.5
+Fremantle,Marrara Oval,0
+Fremantle,Perth Stadium,0
+Fremantle,S.C.G.,1
+Fremantle,Stadium Australia,1
+Fremantle,Subiaco,0
+Fremantle,Sydney Showground,1
+Fremantle,York Park,0.5
+Geelong,Adelaide Oval,1
+Geelong,Carrara,1
+Geelong,Docklands,0
+Geelong,Football Park,1
+Geelong,Gabba,1
+Geelong,Kardinia Park,0
+Geelong,M.C.G.,0
+Geelong,Manuka Oval,0.5
+Geelong,Perth Stadium,1
+Geelong,S.C.G.,1
+Geelong,Stadium Australia,1
+Geelong,Subiaco,1
+Geelong,Sydney Showground,1
+Geelong,York Park,0.5
+Gold Coast,Adelaide Oval,1
+Gold Coast,Carrara,0
+Gold Coast,Cazaly's Stadium,0.5
+Gold Coast,Docklands,1
+Gold Coast,Eureka Stadium,1
+Gold Coast,Football Park,1
+Gold Coast,Gabba,0
+Gold Coast,Jiangwan Stadium,1
+Gold Coast,Kardinia Park,1
+Gold Coast,M.C.G.,1
+Gold Coast,Manuka Oval,0.5
+Gold Coast,Marrara Oval,0
+Gold Coast,Perth Stadium,1
+Gold Coast,S.C.G.,1
+Gold Coast,Subiaco,1
+Gold Coast,Sydney Showground,1
+Gold Coast,Traeger Park,0
+Gold Coast,York Park,0.5
+Greater Western Sydney,Adelaide Oval,1
+Greater Western Sydney,Bellerive Oval,0.5
+Greater Western Sydney,Blacktown,0
+Greater Western Sydney,Carrara,1
+Greater Western Sydney,Docklands,1
+Greater Western Sydney,Football Park,1
+Greater Western Sydney,Gabba,1
+Greater Western Sydney,Kardinia Park,1
+Greater Western Sydney,M.C.G.,1
+Greater Western Sydney,Manuka Oval,0
+Greater Western Sydney,Perth Stadium,1
+Greater Western Sydney,S.C.G.,0
+Greater Western Sydney,Stadium Australia,0
+Greater Western Sydney,Subiaco,1
+Greater Western Sydney,Sydney Showground,0
+Greater Western Sydney,York Park,0.5
+Hawthorn,Adelaide Oval,1
+Hawthorn,Carrara,1
+Hawthorn,Docklands,0
+Hawthorn,Football Park,1
+Hawthorn,Gabba,1
+Hawthorn,Kardinia Park,0.5
+Hawthorn,M.C.G.,0
+Hawthorn,Perth Stadium,1
+Hawthorn,S.C.G.,1
+Hawthorn,Stadium Australia,1
+Hawthorn,Subiaco,1
+Hawthorn,Sydney Showground,1
+Hawthorn,York Park,0
+Melbourne,Adelaide Oval,1
+Melbourne,Bellerive Oval,0.5
+Melbourne,Carrara,1
+Melbourne,Docklands,0
+Melbourne,Football Park,1
+Melbourne,Gabba,1
+Melbourne,Kardinia Park,0.5
+Melbourne,M.C.G.,0
+Melbourne,Manuka Oval,0.5
+Melbourne,Marrara Oval,1
+Melbourne,Perth Stadium,1
+Melbourne,S.C.G.,1
+Melbourne,Subiaco,1
+Melbourne,Sydney Showground,1
+Melbourne,Traeger Park,1
+North Melbourne,Adelaide Oval,1
+North Melbourne,Bellerive Oval,0
+North Melbourne,Carrara,1
+North Melbourne,Cazaly's Stadium,0.5
+North Melbourne,Docklands,0
+North Melbourne,Football Park,1
+North Melbourne,Gabba,1
+North Melbourne,Kardinia Park,0.5
+North Melbourne,M.C.G.,0
+North Melbourne,Manuka Oval,0.5
+North Melbourne,Perth Stadium,1
+North Melbourne,S.C.G.,1
+North Melbourne,Stadium Australia,1
+North Melbourne,Subiaco,1
+North Melbourne,Sydney Showground,1
+North Melbourne,York Park,0.5
+Port Adelaide,Adelaide Oval,0
+Port Adelaide,Bellerive Oval,0.5
+Port Adelaide,Carrara,1
+Port Adelaide,Docklands,1
+Port Adelaide,Eureka Stadium,1
+Port Adelaide,Football Park,0
+Port Adelaide,Gabba,1
+Port Adelaide,Jiangwan Stadium,0
+Port Adelaide,Kardinia Park,1
+Port Adelaide,M.C.G.,1
+Port Adelaide,Manuka Oval,0.5
+Port Adelaide,Marrara Oval,0
+Port Adelaide,Perth Stadium,1
+Port Adelaide,S.C.G.,1
+Port Adelaide,Subiaco,1
+Port Adelaide,Sydney Showground,1
+Port Adelaide,Traeger Park,0
+Port Adelaide,York Park,0.5
+Richmond,Adelaide Oval,1
+Richmond,Bellerive Oval,0.5
+Richmond,Carrara,1
+Richmond,Cazaly's Stadium,1
+Richmond,Docklands,0
+Richmond,Football Park,1
+Richmond,Gabba,1
+Richmond,Kardinia Park,1
+Richmond,M.C.G.,0
+Richmond,Manuka Oval,0.5
+Richmond,Marrara Oval,1
+Richmond,Perth Stadium,1
+Richmond,S.C.G.,1
+Richmond,Stadium Australia,1
+Richmond,Subiaco,1
+Richmond,Sydney Showground,1
+Richmond,York Park,0.5
+St Kilda,Adelaide Oval,1
+St Kilda,Bellerive Oval,0.5
+St Kilda,Carrara,1
+St Kilda,Docklands,0
+St Kilda,Football Park,1
+St Kilda,Gabba,1
+St Kilda,Kardinia Park,0.5
+St Kilda,M.C.G.,0
+St Kilda,Manuka Oval,0.5
+St Kilda,Perth Stadium,1
+St Kilda,S.C.G.,1
+St Kilda,Stadium Australia,1
+St Kilda,Subiaco,1
+St Kilda,Sydney Showground,1
+St Kilda,Wellington,1
+St Kilda,York Park,0.5
+St Kilda,Jiangwan Stadium,0.5
+Sydney,Adelaide Oval,1
+Sydney,Bellerive Oval,0.5
+Sydney,Carrara,1
+Sydney,Docklands,1
+Sydney,Football Park,1
+Sydney,Gabba,1
+Sydney,Kardinia Park,1
+Sydney,M.C.G.,1
+Sydney,Manuka Oval,0
+Sydney,Perth Stadium,1
+Sydney,S.C.G.,0
+Sydney,Stadium Australia,0
+Sydney,Subiaco,1
+Sydney,Sydney Showground,0
+Sydney,Wellington,0
+Sydney,York Park,0.5
+West Coast,Adelaide Oval,1
+West Coast,Bellerive Oval,0.5
+West Coast,Blacktown,1
+West Coast,Carrara,1
+West Coast,Docklands,1
+West Coast,Football Park,1
+West Coast,Gabba,1
+West Coast,Kardinia Park,1
+West Coast,M.C.G.,1
+West Coast,Manuka Oval,0.5
+West Coast,Marrara Oval,0
+West Coast,Perth Stadium,0
+West Coast,S.C.G.,1
+West Coast,Stadium Australia,1
+West Coast,Subiaco,0
+West Coast,Sydney Showground,1
+West Coast,York Park,0.5
+Western Bulldogs,Adelaide Oval,1
+Western Bulldogs,Carrara,1
+Western Bulldogs,Cazaly's Stadium,1
+Western Bulldogs,Docklands,0
+Western Bulldogs,Eureka Stadium,0
+Western Bulldogs,Football Park,1
+Western Bulldogs,Gabba,1
+Western Bulldogs,Kardinia Park,0.5
+Western Bulldogs,M.C.G.,0
+Western Bulldogs,Manuka Oval,0.5
+Western Bulldogs,Marrara Oval,1
+Western Bulldogs,Perth Stadium,1
+Western Bulldogs,S.C.G.,1
+Western Bulldogs,Subiaco,1
+Western Bulldogs,Sydney Showground,1
+Western Bulldogs,York Park,0.5
