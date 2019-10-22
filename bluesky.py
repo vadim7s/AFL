@@ -8,14 +8,17 @@ def find_filenames( path_to_dir, suffix=".txt" ):
 
 class Bluesky:
     
-    def __init__(self,folder):
-        self.folder = folder
+    def __init__(self,folder,extension):
+        self.folder = folder # the folder where source files are
+        self.tables = find_filenames(self.folder,extension) # gets the list of files with expected extension
+        
     
-    def get_tables(self):
-        #result = [] # list of dataframes to return
-        result=find_filenames(self.folder) 
-        return result
+my_class = Bluesky('./bluesky/Adventureworks','.txt')
 
-my_class = Bluesky('C:\\Users\\A30001596\\AFL\\Adventureworks')
+print(my_class.tables)
 
-print(my_class.get_tables())
+line_count_list=[]
+for table in my_class.tables:
+    lines=sum(1 for line in open(my_class.folder+'/'+table,encoding="utf8"))
+    line_count_list.append(lines)
+print(line_count_list)
