@@ -7,18 +7,21 @@ def find_filenames( path_to_dir, suffix=".txt" ):
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
 class Bluesky:
+
+    max_rows = 1000 # limit max rows read
     
-    def __init__(self,folder,extension):
+    def __init__(self,folder,extension,separator):
         self.folder = folder # the folder where source files are
         self.tables = find_filenames(self.folder,extension) # gets the list of files with expected extension
-        
-    
-my_class = Bluesky('./bluesky/Adventureworks','.txt')
+        self.separator = separator
+        self.line_count_list = [] #this gets a list of how many lines each file has
+        for table in self.tables:
+            self.line_count_list.append(sum(1 for line in open(self.folder+'/'+table,encoding="utf8")))        
+        self.dfs = []  # list of Dataframes representing first X rows of each table
+        for table in self.tables:
+            self.dfs.append(pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows))
+            
+# create an instance
+my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
+print(my_class.dfs[1])
 
-print(my_class.tables)
-
-line_count_list=[]
-for table in my_class.tables:
-    lines=sum(1 for line in open(my_class.folder+'/'+table,encoding="utf8"))
-    line_count_list.append(lines)
-print(line_count_list)
