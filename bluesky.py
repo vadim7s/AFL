@@ -6,6 +6,23 @@ def find_filenames( path_to_dir, suffix=".txt" ):
     filenames = os.listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
+def scan_columns(df):
+    '''
+    this function loops through a DF's columns
+    Need to get:
+    1. Number of unique values
+    2. Type
+    3. $
+    '''
+    result=pd.DataFrame(columns=['Column_Type','Distinct_Values'])
+    for column in df.columns:
+        values=df[column].to_list()
+        distinct_values = list(set(values))
+        types = set([type(x) for x in distinct_values])
+        print(types)
+        #result.append([types,len(distinct_values)])
+    return result
+
 class Bluesky:
 
     max_rows = 1000 # limit max rows read
@@ -22,8 +39,8 @@ class Bluesky:
             self.dfs.append(pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows))
             
 # create an instance
-#my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
-my_class = Bluesky('./Adventureworks','.txt','\t')
-
-print(my_class.dfs[1])
+my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
+#my_class = Bluesky('./Adventureworks','.txt','\t')
+print(my_class.tables[0])
+print(scan_columns(my_class.dfs[0]))
 
