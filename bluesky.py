@@ -1,4 +1,6 @@
 import pandas as pd
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 import os as os
 
 
@@ -23,19 +25,27 @@ def scan_columns(df):
     1. Number of unique values
     2. Type
     3. $
+    4. Count "NaN"s
+    5. Remove NaN before checking types
     '''
-    result=pd.DataFrame(columns=['Column_Type','Distinct_Values'])
+    result=pd.DataFrame(columns=['Column_Name','Column_Type','Distinct_Values','Null_Count'])
     for column in df.columns:
         #first try to convert to dates
-        try:
-            df[column] = date_conversion(df[column])
-        except:
-            pass
+        
+        if not is_numeric_dtype(df[column]):
+            try:
+                df[column] = date_conversion(df[column])
+            except:
+                pass
+        null_count=df[column].isna().sum()
+        df[column]=df[column].dropna() 
         values=df[column].to_list()
         distinct_values = list(set(values))
-        types = set([type(x) for x in distinct_values])
-        print(types)
-        #result.append([types,len(distinct_values)])
+        #types = list(set([type(x) for x in distinct_values]))
+        types = str(df[column].dtype)
+        new_line=pd.DataFrame({'Column_Name':[column],'Column_Type':[types],'Distinct_Values':[len(distinct_values)],'Null_Count':[null_count]})
+        result = pd.concat([result,new_line])
+        pass
     return result
 
 class Bluesky:
@@ -56,6 +66,7 @@ class Bluesky:
 # create an instance
 my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
 #my_class = Bluesky('./Adventureworks','.txt','\t')
-print(my_class.tables[0])
-print(scan_columns(my_class.dfs[0]))
+
+test=scan_columns(my_class.dfs[0])
+print(test['Column_Type'])
 
