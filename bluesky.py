@@ -18,11 +18,11 @@ def date_conversion(s):
     dates = {date:pd.to_datetime(date) for date in s.unique()}
     return s.map(dates)
 
-def scan_columns(dfs,tables):
+def scan_columns(dfs,tables,entity):
     '''
     this function loops through a DF's columns and puts it all in one dataframe
     '''
-    result=pd.DataFrame(columns=['Table_Name','Column_Name','Column_Type','Distinct_Values','Null_Count'])
+    result=pd.DataFrame(columns=['Table_Name','Column_Name','Column_Type','Distinct_Values','Null_Count','Entity_Flag'])
     for df,table in zip(dfs,tables):
         for column in df.columns:
             #first try to convert to dates
@@ -38,16 +38,18 @@ def scan_columns(dfs,tables):
             distinct_values = list(set(values))
             #types = list(set([type(x) for x in distinct_values]))
             types = str(df[column].dtype)
-            new_line=pd.DataFrame({'Table_Name':[table],'Column_Name':[column],'Column_Type':[types],'Distinct_Values':[len(distinct_values)],'Null_Count':[null_count]})
+            if table==entity:
+                entity_flag=1
+            else:
+                entity_flag=0
+            new_line=pd.DataFrame({'Table_Name':[table],'Column_Name':[column],'Column_Type':[types],'Distinct_Values':[len(distinct_values)],'Null_Count':[null_count],'Entity_Flag':[entity_flag]})
             result = pd.concat([result,new_line])
             pass
     return result
 
 class Bluesky:
-
     max_rows = 1000 # limit max rows read
-    
-    def __init__(self,folder,extension,separator):
+    def __init__(self,folder,extension,separator,entity):
         self.folder = folder # the folder where source files are
         self.tables = find_filenames(self.folder,extension) # gets the list of files with expected extension
         self.separator = separator
@@ -57,12 +59,16 @@ class Bluesky:
         self.dfs = []  # list of Dataframes representing first X rows of each table where X is defined by the class parameter max_rows
         for table in self.tables:
             self.dfs.append(pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows))
-        self.column_scan=scan_columns(self.dfs,self.tables)
+        self.entity = entity
+        self.column_scan=scan_columns(self.dfs,self.tables,self.entity)
             
 # create an instance
-my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
+my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
 #my_class = Bluesky('./Adventureworks','.txt','\t')
 
-
-print(my_class.column_scan)
+# not set tables to loop for matching
+df=my_class.column_scan
+entity_columns = df[df['Entity_Flag']==1]
+loop_columns = df[df['Entity_Flag']==0]
+pass
 
