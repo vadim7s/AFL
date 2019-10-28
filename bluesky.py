@@ -18,34 +18,29 @@ def date_conversion(s):
     dates = {date:pd.to_datetime(date) for date in s.unique()}
     return s.map(dates)
 
-def scan_columns(df):
+def scan_columns(dfs,tables):
     '''
-    this function loops through a DF's columns
-    Need to get:
-    1. Number of unique values
-    2. Type
-    3. $
-    4. Count "NaN"s
-    5. Remove NaN before checking types
+    this function loops through a DF's columns and puts it all in one dataframe
     '''
-    result=pd.DataFrame(columns=['Column_Name','Column_Type','Distinct_Values','Null_Count'])
-    for column in df.columns:
-        #first try to convert to dates
-        
-        if not is_numeric_dtype(df[column]):
-            try:
-                df[column] = date_conversion(df[column])
-            except:
-                pass
-        null_count=df[column].isna().sum()
-        df[column]=df[column].dropna() 
-        values=df[column].to_list()
-        distinct_values = list(set(values))
-        #types = list(set([type(x) for x in distinct_values]))
-        types = str(df[column].dtype)
-        new_line=pd.DataFrame({'Column_Name':[column],'Column_Type':[types],'Distinct_Values':[len(distinct_values)],'Null_Count':[null_count]})
-        result = pd.concat([result,new_line])
-        pass
+    result=pd.DataFrame(columns=['Table_Name','Column_Name','Column_Type','Distinct_Values','Null_Count'])
+    for df,table in zip(dfs,tables):
+        for column in df.columns:
+            #first try to convert to dates
+            
+            if not is_numeric_dtype(df[column]):
+                try:
+                    df[column] = date_conversion(df[column])
+                except:
+                    pass
+            null_count=df[column].isna().sum()
+            df[column]=df[column].dropna() 
+            values=df[column].to_list()
+            distinct_values = list(set(values))
+            #types = list(set([type(x) for x in distinct_values]))
+            types = str(df[column].dtype)
+            new_line=pd.DataFrame({'Table_Name':[table],'Column_Name':[column],'Column_Type':[types],'Distinct_Values':[len(distinct_values)],'Null_Count':[null_count]})
+            result = pd.concat([result,new_line])
+            pass
     return result
 
 class Bluesky:
@@ -62,11 +57,12 @@ class Bluesky:
         self.dfs = []  # list of Dataframes representing first X rows of each table where X is defined by the class parameter max_rows
         for table in self.tables:
             self.dfs.append(pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows))
+        self.column_scan=scan_columns(self.dfs,self.tables)
             
 # create an instance
 my_class = Bluesky('./bluesky/Adventureworks','.txt','\t')
 #my_class = Bluesky('./Adventureworks','.txt','\t')
 
-test=scan_columns(my_class.dfs[0])
-print(test['Column_Type'])
+
+print(my_class.column_scan)
 
