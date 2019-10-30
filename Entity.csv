@@ -1,0 +1,16 @@
+Table_Name,Column_Name,Column_Type,Length,Distinct_Values,Null_Count,Entity_Flag
+Customer.txt,CustomerID,int64,847,847,0,1
+Customer.txt,NameStyle,int64,847,1,0,1
+Customer.txt,Title,object,847,5,7,1
+Customer.txt,FirstName,object,847,315,0,1
+Customer.txt,MiddleName,object,847,29,343,1
+Customer.txt,LastName,object,847,398,0,1
+Customer.txt,Suffix,object,847,6,799,1
+Customer.txt,CompanyName,object,847,439,0,1
+Customer.txt,SalesPerson,object,847,9,0,1
+Customer.txt,EmailAddress,object,847,440,0,1
+Customer.txt,Phone,object,847,430,0,1
+Customer.txt,PasswordHash,object,847,440,0,1
+Customer.txt,PasswordSalt,object,847,440,0,1
+Customer.txt,rowguid,object,847,847,0,1
+Customer.txt,ModifiedDate,datetime64[ns],847,29,0,1
