@@ -59,20 +59,24 @@ class Bluesky:
             self.line_count_list.append(sum(1 for line in open(self.folder+'/'+table,encoding="utf8")))        
         self.dfs = []  # list of Dataframes representing first X rows of each table where X is defined by the class parameter max_rows
         for table in self.tables:
-            self.dfs.append(pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows))
+            df=pd.read_csv(self.folder+'/'+table,sep=self.separator ,parse_dates=True,nrows=self.max_rows)
+            if table==entity:
+                self.entity_df=df
+            self.dfs.append(df)
         self.entity = entity
         self.column_scan=scan_columns(self.dfs,self.tables,self.entity)
-            
+
+# start timer            
+import time
+start = time.time()
 # create an instance
-#my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
-my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
+my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
+#my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
 
 # not set tables to loop for matching
 df=my_class.column_scan
 entity_columns = df[df['Entity_Flag']==1]
-entity_columns.to_csv('Entity.csv',index=False)
 loop_columns = df[df['Entity_Flag']==0]
-loop_columns.to_csv('Loop.csv',index=False)
 
 for i, row in entity_columns.iterrows():
     # conditions to take a column as a possible key
@@ -80,8 +84,17 @@ for i, row in entity_columns.iterrows():
         if row[2][0:3]!='date' and row[2][0:4]!='float':  # it cannot be a date or float
             if row[3]==row[4]: # all available values should be unique
                 # now for columns which are good candidates for IDs try to match to other tables
-                for j, tabl in loop_columns.iterrows():
-                    if tabl[5]==0 and tabl[2][0:3]!='date' and tabl[2][0:4]!='float' and  tabl[3]==tabl[4]:
-                        print('for row ',row[1],' found possible candidate in table ',tabl[0], ' column ',tabl[1])
-                        # now look at the actual data and if its intersects
-
+                entity_values = set(my_class.entity_df[row[1]])
+                for curr_df, tab_name in zip(my_class.dfs, my_class.tables):
+                    for j, tabl in loop_columns.iterrows():
+                        if tab_name==tabl[0] and tabl[5]==0 and tabl[2][0:3]!='date' and tabl[2][0:4]!='float' and  tabl[3]==tabl[4]:
+                            #
+                            # now look at the actual data and if its intersects
+                            values = set(curr_df[tabl[1]])
+                            current_intersection = entity_values.intersection(values)
+                            number_matching= len(current_intersection)
+                            if number_matching>0:
+                                print('for row ',row[1],' found possible candidate in ',tabl[0], ' column ',tabl[1],' with ',number_matching)
+                                # next assess completeness of a match
+end = time.time()
+print('Finished with execustion time of: ',end - start)
