@@ -3,6 +3,10 @@ from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 import os as os
 
+from difflib import SequenceMatcher
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 def find_filenames( path_to_dir, suffix=".txt" ):
     filenames = os.listdir(path_to_dir)
@@ -78,23 +82,41 @@ df=my_class.column_scan
 entity_columns = df[df['Entity_Flag']==1]
 loop_columns = df[df['Entity_Flag']==0]
 
+candidates = pd.DataFrame()  # create a table for possible links
+# Table_Name,Column_Name,Column_Type,Length,Distinct_Values,Null_Count,Entity_Flag
 for i, row in entity_columns.iterrows():
     # conditions to take a column as a possible key
-    if row[5]==0:   # there should not be nulls 
-        if row[2][0:3]!='date' and row[2][0:4]!='float':  # it cannot be a date or float
-            if row[3]==row[4]: # all available values should be unique
+    From_Table = row[0]
+    From_Column =row[1]
+    From_Type = row[2]
+    From_Length = row[3]
+    From_Distinct = row[4]
+    From_Nulls = row[5]
+    From_Entity_Flag = row[6]
+    if From_Nulls==0:   # there should not be nulls 
+        if From_Type[0:3]!='date' and From_Type[0:4]!='float':  # it cannot be a date or float
+            if From_Length==From_Distinct: # all available values should be unique
                 # now for columns which are good candidates for IDs try to match to other tables
-                entity_values = set(my_class.entity_df[row[1]])
+                entity_values = set(my_class.entity_df[From_Column])
                 for curr_df, tab_name in zip(my_class.dfs, my_class.tables):
                     for j, tabl in loop_columns.iterrows():
-                        if tab_name==tabl[0] and tabl[5]==0 and tabl[2][0:3]!='date' and tabl[2][0:4]!='float' and  tabl[3]==tabl[4]:
+                        To_Table = tabl[0]
+                        To_Column =tabl[1]
+                        To_Type = tabl[2]
+                        To_Length = tabl[3]
+                        To_Distinct = tabl[4]
+                        To_Nulls = tabl[5]
+                        To_Entity_Flag = tabl[6]    
+                        if tab_name==To_Table and To_Type[0:3]!='date' and To_Type[0:4]!='float':
                             #
                             # now look at the actual data and if its intersects
-                            values = set(curr_df[tabl[1]])
+                            values = set(curr_df[To_Column])
                             current_intersection = entity_values.intersection(values)
                             number_matching= len(current_intersection)
                             if number_matching>0:
-                                print('for row ',row[1],' found possible candidate in ',tabl[0], ' column ',tabl[1],' with ',number_matching)
-                                # next assess completeness of a match
+                                new_row = pd.DataFrame({'From_Table':[From_Table],'From_Column':[From_Column],'To_Table':[To_Table],'Candidate_Column':[To_Column],'Matching_Values':[number_matching],'Len_From':[From_Length],'To_Distinct_Vals':[To_Distinct],'Name_Similarity':[similar(From_Column,To_Column)]})
+                                new_row['Share_Matched']=new_row['Matching_Values']/new_row['To_Distinct_Vals']
+                                candidates = pd.concat([candidates,new_row])                                
 end = time.time()
+candidates.to_csv('candidates.csv')
 print('Finished with execustion time of: ',end - start)
