@@ -9,6 +9,9 @@ def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 def find_filenames( path_to_dir, suffix=".txt" ):
+    '''
+    finds files in a folder with a given extension
+    '''
     filenames = os.listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
@@ -25,7 +28,9 @@ def date_conversion(s):
 
 
 class Bluesky:
+    
     max_rows = 1000 # limit max rows read
+    
     def __init__(self,folder,extension,separator,entity):
         self.folder = folder # the folder where source files are
         self.tables = find_filenames(self.folder,extension) # gets the list of files with expected extension
@@ -40,9 +45,11 @@ class Bluesky:
                 self.entity_df=df
             self.dfs.append(df)
         self.entity = entity
-        #self.column_scan=scan_columns(self.dfs,self.tables,self.entity)
-        self.candidates = pd.DataFrame()
-        self.get_linkages()
+        self.column_table=self.scan_columns() # create table of all columns
+        self.entity_columns = self.column_table[self.column_table['Entity_Flag']==1]
+        self.loop_columns = self.column_table[self.column_table['Entity_Flag']==0]
+        self.candidates = pd.DataFrame() # create an empty table of possible links
+        self.get_linkages() # have a go at finding links
 
     def scan_columns(self):
         '''
@@ -52,7 +59,6 @@ class Bluesky:
         for df,table in zip(self.dfs,self.tables):
             for column in df.columns:
                 #first try to convert to dates
-                
                 if not is_numeric_dtype(df[column]):
                     try:
                         df[column] = date_conversion(df[column])
@@ -79,10 +85,8 @@ class Bluesky:
         this method finds columns most likely being linking columns
         initially between entity table and all other tables
         '''
-        df=self.scan_columns()
-        entity_columns = df[df['Entity_Flag']==1]
-        loop_columns = df[df['Entity_Flag']==0]
-        for i, row in entity_columns.iterrows():
+        
+        for i, row in self.entity_columns.iterrows():
             # conditions to take a column as a possible key
             From_Table = row[0]
             From_Column =row[1]
@@ -97,7 +101,7 @@ class Bluesky:
                         # now for columns which are good candidates for IDs try to match to other tables
                         entity_values = set(self.entity_df[From_Column])
                         for curr_df, tab_name in zip(self.dfs, self.tables):
-                            for j, tabl in loop_columns.iterrows():
+                            for j, tabl in self.loop_columns.iterrows():
                                 To_Table = tabl[0]
                                 To_Column =tabl[1]
                                 To_Type = tabl[2]
@@ -120,9 +124,9 @@ class Bluesky:
 import time
 start = time.time()
 # create an instance
-my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
+#my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
 
-#my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
+my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
 
 end = time.time()
 my_class.candidates.to_csv('candidates.csv')
