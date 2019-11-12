@@ -1,0 +1,10 @@
+To_Table,From_Table,From_Column,Candidate_Column,Matching_Values,Len_From,To_Distinct_Vals,Name_Similarity,Share_Matched,Strength
+SalesOrderHeader.txt,Customer.txt,CustomerID,CustomerID,32,847,32,1.0,1.0,2.0
+SalesOrderDetail.txt,Customer.txt,CustomerID,OrderQty,13,847,19,0.2222222222222222,0.6842105263157895,0.9064327485380117
+ProductModelProductDescription.txt,Customer.txt,CustomerID,ProductModelID,79,847,127,0.5,0.6220472440944882,1.1220472440944882
+ProductModel.txt,Customer.txt,CustomerID,ProductModelID,80,847,128,0.5,0.625,1.125
+ProductDescription.txt,Customer.txt,CustomerID,ProductDescriptionID,23,847,762,0.4,0.030183727034120734,0.4301837270341208
+ProductCategory.txt,Customer.txt,CustomerID,ProductCategoryID,28,847,41,0.4444444444444444,0.6829268292682927,1.127371273712737
+Product.txt,Customer.txt,CustomerID,ProductModelID,73,847,119,0.5,0.6134453781512605,1.1134453781512605
+CustomerAddress.txt,Customer.txt,CustomerID,CustomerID,407,847,407,1.0,1.0,2.0
+Address.txt,Customer.txt,CustomerID,AddressID,144,847,449,0.3157894736842105,0.3207126948775056,0.636502168561716
