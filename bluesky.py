@@ -124,10 +124,15 @@ class Bluesky:
 import time
 start = time.time()
 # create an instance
-#my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
 
-my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
+my_class = Bluesky('./bluesky/Adventureworks','.txt','\t','Customer.txt')
+#my_class = Bluesky('./Adventureworks','.txt','\t','Customer.txt')
 
-end = time.time()
+
+my_class.candidates['Strength']=my_class.candidates['Name_Similarity']+my_class.candidates['Share_Matched']
+my_class.candidates.sort_values(by=['To_Table', 'Strength'])
 my_class.candidates.to_csv('candidates.csv')
+temp_df = my_class.candidates.loc[my_class.candidates.groupby('To_Table').tail(1)]
+temp_df.to_csv('choice.csv',index=False)
+end = time.time()
 print('Finished with execustion time of: ',end - start)
